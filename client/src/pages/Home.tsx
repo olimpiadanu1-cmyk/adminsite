@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { saveApplication, useAdminUnlock, getConfig } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 import bgImage from "@/assets/bg.png";
-import { ShieldAlert, Send, Lock } from "lucide-react";
+import logoImage from "@assets/photo_2025-09-12_14-10-05.png_1772531750546.jpg";
+import { Send, Lock } from "lucide-react";
 
 export default function Home() {
   const { toast } = useToast();
@@ -12,7 +13,7 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const config = getConfig();
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, watch } = useForm({
     defaultValues: {
       server: "Москва"
     }
@@ -45,16 +46,12 @@ export default function Home() {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check main admin
     if (password === config.adminPassword) {
       setShowPrompt(false);
       localStorage.setItem("admin_role", "full");
       setLocation("/admin");
       return;
     }
-
-    // Check server specific admins
     for (const [serverName, serverCfg] of Object.entries(config.servers)) {
       if (password === serverCfg.password) {
         setShowPrompt(false);
@@ -63,18 +60,13 @@ export default function Home() {
         return;
       }
     }
-
-    toast({
-      variant: "destructive",
-      title: "Ошибка",
-      description: "Неверный пароль доступа.",
-    });
+    toast({ variant: "destructive", title: "Ошибка", description: "Неверный пароль доступа." });
     setPassword("");
   };
 
   return (
     <div 
-      className="min-h-screen relative flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+      className="min-h-screen relative flex flex-col items-center justify-start py-8 px-4 sm:px-6 lg:px-8 overflow-x-hidden"
       style={{
         backgroundImage: `url(${bgImage})`,
         backgroundSize: 'cover',
@@ -82,17 +74,17 @@ export default function Home() {
         backgroundAttachment: 'fixed'
       }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
 
-      {/* Top Status Menu */}
-      <div className="relative z-10 w-full max-w-4xl mb-8 animate-in slide-in-from-top duration-700">
-        <div className="glass-panel p-4 rounded-xl flex items-center justify-around overflow-hidden border border-white/10 shadow-2xl">
+      {/* Top Status Menu - Responsive Fix */}
+      <div className="relative z-10 w-full max-w-4xl mb-6 animate-in slide-in-from-top duration-700">
+        <div className="glass-panel p-3 sm:p-4 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 border border-white/10 shadow-2xl">
           {Object.entries(config.servers).map(([name, cfg]) => (
-            <div key={name} className="flex flex-col items-center">
-              <span className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-1">{name}</span>
+            <div key={name} className="flex flex-col items-center justify-center p-2 rounded-lg bg-black/20 border border-white/5">
+              <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">{name}</span>
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${cfg.isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                <span className={`text-sm font-display font-bold uppercase tracking-wide ${cfg.isOpen ? 'text-green-400' : 'text-red-400'}`}>
+                <span className={`text-xs sm:text-sm font-display font-bold uppercase tracking-wide ${cfg.isOpen ? 'text-green-400' : 'text-red-400'}`}>
                   {cfg.isOpen ? 'Набор Открыт' : 'Набор Закрыт'}
                 </span>
               </div>
@@ -101,73 +93,47 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="relative w-full max-w-4xl space-y-8 glass-panel p-8 rounded-xl shadow-2xl animate-in fade-in zoom-in duration-500">
-        <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 border border-primary/50 shadow-[0_0_15px_rgba(225,29,72,0.3)]">
-            <ShieldAlert className="w-8 h-8 text-primary" />
+      <div className="relative w-full max-w-3xl glass-panel p-6 sm:p-10 rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-500 mb-12 border border-white/10">
+        <div className="text-center mb-10">
+          <div className="mx-auto w-24 h-24 mb-6 rounded-full overflow-hidden border-2 border-primary/50 shadow-[0_0_20px_rgba(225,29,72,0.4)] animate-pulse">
+            <img src={logoImage} alt="Logo" className="w-full h-full object-cover" />
           </div>
-          <h2 className="mt-6 text-4xl font-display font-bold tracking-wider text-white uppercase" style={{ textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>
-            Заявка на пост <span className="text-primary">Администратора</span>
+          <h2 className="text-2xl sm:text-4xl font-display font-bold tracking-tighter text-white uppercase leading-none">
+            ЗАЯВКА НА ПОСТ
           </h2>
-          <p className="mt-2 text-sm text-gray-400 font-sans tracking-wide">
+          <h2 className="text-3xl sm:text-5xl font-display font-bold tracking-tighter text-primary uppercase leading-none mt-1" style={{ textShadow: '0 0 15px rgba(225,29,72,0.5)' }}>
+            АДМИНИСТРАТОРА
+          </h2>
+          <p className="mt-4 text-xs sm:text-sm text-gray-400 font-sans tracking-wide max-w-md mx-auto">
             Заполните форму ниже для подачи заявления. Все поля обязательны к заполнению.
           </p>
         </div>
 
-        <form className="mt-8 space-y-6 font-sans" onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Ваш логин *</label>
-              <input 
-                {...register("login", { required: true })}
-                className="w-full px-4 py-3 rounded-md gaming-input text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="Логин аккаунта"
-              />
+        <form className="space-y-6 font-sans" onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Ваш логин *</label>
+              <input {...register("login", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm" placeholder="Логин аккаунта" />
             </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Ваше имя (В реальной жизни) *</label>
-              <input 
-                {...register("realName", { required: true })}
-                className="w-full px-4 py-3 rounded-md gaming-input text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="Иван Иванов"
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Ваше имя *</label>
+              <input {...register("realName", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm" placeholder="Имя (в жизни)" />
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Ваш возраст *</label>
-              <input 
-                type="number"
-                {...register("age", { required: true })}
-                className="w-full px-4 py-3 rounded-md gaming-input text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="18"
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Ваш возраст *</label>
+              <input type="number" {...register("age", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm" placeholder="18" />
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Часовой пояс *</label>
-              <input 
-                {...register("timezone", { required: true })}
-                className="w-full px-4 py-3 rounded-md gaming-input text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="МСК (UTC+3)"
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Часовой пояс *</label>
+              <input {...register("timezone", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm" placeholder="МСК (UTC+3)" />
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Ваш средний онлайн *</label>
-              <input 
-                {...register("online", { required: true })}
-                className="w-full px-4 py-3 rounded-md gaming-input text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="4-5 часов"
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Средний онлайн *</label>
+              <input {...register("online", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm" placeholder="4-5 часов" />
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Игровой сервер *</label>
-              <select 
-                {...register("server", { required: true })}
-                className={`w-full px-4 py-3 rounded-md gaming-input text-white focus:outline-none focus:ring-1 focus:ring-primary [&>option]:bg-gray-900 ${!isServerOpen ? 'border-red-500/50' : ''}`}
-              >
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Игровой сервер *</label>
+              <select {...register("server", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm appearance-none [&>option]:bg-gray-900">
                 {Object.entries(config.servers).map(([name, cfg]) => (
                   <option key={name} value={name}>{name} {!cfg.isOpen ? '(Закрыто)' : ''}</option>
                 ))}
@@ -175,93 +141,86 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Расскажите о себе (В реальной жизни) *</label>
-            <textarea 
-              {...register("about", { required: true })}
-              rows={3}
-              className="w-full px-4 py-3 rounded-md gaming-input text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-              placeholder="Коротко о себе, увлечениях, почему хотите на эту должность..."
-            />
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Расскажите о себе *</label>
+            <textarea {...register("about", { required: true })} rows={3} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm resize-none" placeholder="Коротко о себе..." />
           </div>
 
-          {!isServerOpen ? (
-            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3 animate-in shake duration-500">
-              <Lock className="w-5 h-5 text-red-500" />
-              <p className="text-red-400 text-sm font-medium">Набор на сервер {selectedServer} временно закрыт администрацией.</p>
-            </div>
-          ) : (
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-lg font-display font-medium rounded-md text-white gaming-button focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            >
-              {isSubmitting ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Отправка...
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  ОТПРАВИТЬ ЗАЯВЛЕНИЕ
-                  <Send className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              )}
-            </button>
-          )}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Баны на проекте *</label>
+            <textarea {...register("bans", { required: true })} rows={2} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm resize-none" placeholder="Нет / Да (причины)" />
+          </div>
 
-          <div className="pt-4 border-t border-white/5 grid grid-cols-1 md:grid-cols-2 gap-6 opacity-80">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Игровой никнейм и логин авторизации *</label>
-              <input {...register("nickname", { required: true })} className="w-full px-4 py-3 rounded-md gaming-input text-white" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4 border-t border-white/5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Ник и логин *</label>
+              <input {...register("nickname", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm" placeholder="John_Doe (login123)" />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Ваш игровой уровень *</label>
-              <input type="number" {...register("level", { required: true })} className="w-full px-4 py-3 rounded-md gaming-input text-white" />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Игровой уровень *</label>
+              <input type="number" {...register("level", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm" placeholder="Уровень персонажа" />
             </div>
           </div>
-          
-          {/* Rest of form simplified for brevity in turn */}
-          <div className="space-y-4">
-             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Опыт игры на GTA V проектах *</label>
-              <textarea {...register("experience", { required: true })} rows={2} className="w-full px-4 py-3 rounded-md gaming-input text-white resize-none" />
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Опыт на GTA V проектах *</label>
+            <textarea {...register("experience", { required: true })} rows={2} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm resize-none" placeholder="Где играли, какие должности..." />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Опыт администратора *</label>
+            <textarea {...register("adminExp", { required: true })} rows={2} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm resize-none" placeholder="Были ли хелпером/админом? (Ник)" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Ссылка на VK *</label>
+              <input {...register("vk", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm" placeholder="vk.com/id..." />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Ссылка на VK *</label>
-                <input {...register("vk", { required: true })} className="w-full px-4 py-3 rounded-md gaming-input text-white" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Ссылка на фото статистики *</label>
-                <input {...register("statsPhoto", { required: true })} className="w-full px-4 py-3 rounded-md gaming-input text-white" />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Ссылка на статистику *</label>
+              <input {...register("statsPhoto", { required: true })} className="w-full px-4 py-3 rounded-xl gaming-input text-white text-sm" placeholder="imgur.com/..." />
             </div>
-            <input type="hidden" {...register("bans", { value: "Не указано" })} />
-            <input type="hidden" {...register("adminExp", { value: "Не указано" })} />
-            <input type="hidden" {...register("faction", { value: "Любая" })} />
+          </div>
+
+          <div className="pt-6">
+            {!isServerOpen ? (
+              <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-center gap-3 animate-in shake duration-500">
+                <Lock className="w-5 h-5 text-red-500" />
+                <p className="text-red-400 text-sm font-bold uppercase tracking-wide">Набор на {selectedServer} закрыт</p>
+              </div>
+            ) : (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm sm:text-lg font-display font-black rounded-xl text-white gaming-button focus:outline-none focus:ring-2 focus:ring-primary shadow-xl shadow-primary/20"
+              >
+                {isSubmitting ? "ОТПРАВКА..." : (
+                  <span className="flex items-center gap-3">
+                    ОТПРАВИТЬ ЗАЯВЛЕНИЕ <Send className="w-5 h-5" />
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </form>
       </div>
 
       {showPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in">
-          <form onSubmit={handleAdminLogin} className="glass-panel p-8 rounded-xl max-w-md w-full animate-in zoom-in-95">
-            <h3 className="text-2xl font-display font-bold text-white mb-6 text-center text-primary uppercase tracking-widest">Restricted Area</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in">
+          <form onSubmit={handleAdminLogin} className="glass-panel p-8 rounded-2xl max-w-sm w-full animate-in zoom-in-95 border border-white/10 mx-4">
+            <h3 className="text-xl font-display font-black text-white mb-6 text-center text-primary uppercase tracking-[0.2em]">ACCESS KEY</h3>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Введите ключ доступа"
-              className="w-full px-4 py-3 rounded-md gaming-input text-white mb-6 text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-primary font-bold"
+              placeholder="••••••••"
+              className="w-full px-4 py-4 rounded-xl gaming-input text-white mb-6 text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-primary font-bold bg-black/50"
               autoFocus
             />
             <div className="flex gap-4">
-              <button type="button" onClick={() => setShowPrompt(false)} className="flex-1 py-3 px-4 rounded-md bg-white/5 text-gray-400 hover:text-white transition-colors uppercase tracking-widest text-xs font-bold">Отмена</button>
-              <button type="submit" className="flex-1 py-3 px-4 rounded-md gaming-button text-white uppercase tracking-widest text-xs font-bold shadow-lg shadow-primary/20">Вход</button>
+              <button type="button" onClick={() => setShowPrompt(false)} className="flex-1 py-3 px-4 rounded-xl bg-white/5 text-gray-400 hover:text-white transition-colors uppercase tracking-widest text-[10px] font-black border border-white/5">Отмена</button>
+              <button type="submit" className="flex-1 py-3 px-4 rounded-xl gaming-button text-white uppercase tracking-widest text-[10px] font-black">Вход</button>
             </div>
           </form>
         </div>
