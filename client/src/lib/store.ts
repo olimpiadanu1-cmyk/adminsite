@@ -22,6 +22,34 @@ export type Application = {
   createdAt: number;
 };
 
+export type ServerConfig = {
+  password: string;
+  isOpen: boolean;
+};
+
+export type AppConfig = {
+  adminPassword: string;
+  servers: Record<string, ServerConfig>;
+};
+
+const DEFAULT_CONFIG: AppConfig = {
+  adminPassword: "reynovadminlist",
+  servers: {
+    "Москва": { password: "listadminmsk", isOpen: true },
+    "Питер": { password: "adminspiter", isOpen: true },
+    "Екатеринбург": { password: "ekbadminlist", isOpen: true }
+  }
+};
+
+export const getConfig = (): AppConfig => {
+  const data = localStorage.getItem("gta_config");
+  return data ? JSON.parse(data) : DEFAULT_CONFIG;
+};
+
+export const saveConfig = (config: AppConfig) => {
+  localStorage.setItem("gta_config", JSON.stringify(config));
+};
+
 export const getApplications = (): Application[] => {
   const data = localStorage.getItem("gta_applications");
   return data ? JSON.parse(data) : [];
@@ -52,7 +80,7 @@ export const useAdminUnlock = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return; // Don't trigger if typing in an input
+        return;
       }
       
       const key = e.key.toLowerCase();
