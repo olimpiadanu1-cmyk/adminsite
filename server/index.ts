@@ -14,13 +14,14 @@ declare module "http" {
 
 app.use(
   express.json({
+    limit: '50mb',
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
   }),
 );
 
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -49,7 +50,15 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        // Strip base64 image data before logging to prevent log flood
+        const sanitized = JSON.parse(JSON.stringify(capturedJsonResponse, (key, value) => {
+          if (typeof value === "string" && value.startsWith("data:image")) {
+            return "[base64 image]";
+          }
+          return value;
+        }));
+        const str = JSON.stringify(sanitized);
+        logLine += ` :: ${str.length > 300 ? str.slice(0, 297) + "..." : str}`;
       }
 
       log(logLine);
@@ -58,6 +67,7 @@ app.use((req, res, next) => {
 
   next();
 });
+
 
 (async () => {
   await registerRoutes(httpServer, app);
@@ -94,7 +104,6 @@ app.use((req, res, next) => {
     {
       port,
       host: "0.0.0.0",
-      reusePort: true,
     },
     () => {
       log(`serving on port ${port}`);

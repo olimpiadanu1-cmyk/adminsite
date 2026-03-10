@@ -1,75 +1,113 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "./queryClient";
+import { Application, AppConfig, SiteStats } from "@shared/schema";
 
-export type Application = {
-  id: string;
-  login: string;
-  realName: string;
-  age: string;
-  timezone: string;
-  online: string;
-  about: string;
-  bans: string;
-  nickname: string;
-  level: string;
-  experience: string;
-  adminExp: string;
-  faction: string;
-  vk: string;
-  server: string;
-  statsPhoto: string;
-  status: "pending" | "approved" | "rejected";
-  createdAt: number;
-};
+export type { Application, AppConfig, SiteStats };
 
-export type ServerConfig = {
-  password: string;
-  isOpen: boolean;
-};
-
-export type AppConfig = {
-  adminPassword: string;
-  servers: Record<string, ServerConfig>;
-};
-
-const DEFAULT_CONFIG: AppConfig = {
-  adminPassword: "reynovadminlist",
-  servers: {
-    "Москва": { password: "listadminmsk", isOpen: true },
-    "Питер": { password: "adminspiter", isOpen: true },
-    "Екатеринбург": { password: "ekbadminlist", isOpen: true }
-  }
-};
-
-export const getConfig = (): AppConfig => {
-  const data = localStorage.getItem("gta_config");
-  return data ? JSON.parse(data) : DEFAULT_CONFIG;
-};
-
-export const saveConfig = (config: AppConfig) => {
-  localStorage.setItem("gta_config", JSON.stringify(config));
-};
-
-export const getApplications = (): Application[] => {
-  const data = localStorage.getItem("gta_applications");
-  return data ? JSON.parse(data) : [];
-};
-
-export const saveApplication = (app: Omit<Application, "id" | "status" | "createdAt">) => {
-  const apps = getApplications();
-  apps.push({
-    ...app,
-    id: Math.random().toString(36).substring(2, 9),
-    status: "pending",
-    createdAt: Date.now(),
+export const useConfig = () => {
+  return useQuery<AppConfig>({
+    queryKey: ["/api/config"],
   });
-  localStorage.setItem("gta_applications", JSON.stringify(apps));
 };
 
-export const updateApplicationStatus = (id: string, status: "approved" | "rejected") => {
-  const apps = getApplications();
-  const updated = apps.map((app) => (app.id === id ? { ...app, status } : app));
-  localStorage.setItem("gta_applications", JSON.stringify(updated));
+export const useApplications = () => {
+  return useQuery<Application[]>({
+    queryKey: ["/api/applications"],
+  });
+};
+
+export const useStats = () => {
+  return useQuery<SiteStats>({
+    queryKey: ["/api/stats"],
+  });
+};
+
+export const incrementVisits = async () => {
+  await apiRequest("POST", "/api/visits");
+};
+
+export const saveApplication = async (app: Omit<Application, "id" | "status" | "createdAt" | "reviewedAt">) => {
+  const res = await apiRequest("POST", "/api/applications", app);
+  return res.json();
+};
+
+export const updateApplicationStatus = async (id: string, status: "approved" | "rejected", reason?: string) => {
+  const res = await apiRequest("PATCH", `/api/applications/${id}`, { status, reason });
+  return res.json();
+};
+
+export const updateApplicationNotes = async (id: string, notes: string) => {
+  const res = await apiRequest("PATCH", `/api/applications/${id}/notes`, { notes });
+  return res.json();
+};
+
+export const deleteApplication = async (id: string) => {
+  await apiRequest("DELETE", `/api/applications/${id}`);
+};
+
+export const saveConfig = async (config: AppConfig) => {
+  const res = await apiRequest("POST", "/api/config", config);
+  return res.json();
+};
+
+// WebSocket Hook for real-time updates
+export const useRealtimeUpdates = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+    let socket: WebSocket;
+    let reconnectTimeout: NodeJS.Timeout;
+
+    const connect = () => {
+      socket = new WebSocket(wsUrl);
+
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === "config_updated") {
+            queryClient.invalidateQueries({ queryKey: ["/api/config"] });
+          } else if (message.type === "app_created" || message.type === "app_updated" || message.type === "app_deleted") {
+            queryClient.invalidateQueries({ queryKey: ["/api/applications"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+          } else if (message.type === "stats_updated") {
+            queryClient.setQueryData(["/api/stats"], message.data);
+          }
+        } catch (e) {
+          console.error("WS Message Error:", e);
+        }
+      };
+
+      socket.onclose = () => {
+        reconnectTimeout = setTimeout(connect, 3000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      if (socket) socket.close();
+      clearTimeout(reconnectTimeout);
+    };
+  }, [queryClient]);
+};
+
+// Date Formatter Utility (formatted for MSK)
+export const formatMSKDate = (timestamp: number | undefined) => {
+  if (!timestamp) return "—";
+  return new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(timestamp));
 };
 
 export const useAdminUnlock = () => {
@@ -82,7 +120,7 @@ export const useAdminUnlock = () => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
-      
+
       const key = e.key.toLowerCase();
       setKeys((prev) => {
         const newKeys = [...prev, key].slice(-4);

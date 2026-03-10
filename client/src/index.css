@@ -34,26 +34,26 @@
 
 @layer base {
   :root {
-    --background: 220 20% 10%;
+    --background: 230 25% 6%;
     --foreground: 210 40% 98%;
-    --card: 220 25% 12%;
+    --card: 230 25% 8%;
     --card-foreground: 210 40% 98%;
-    --popover: 220 25% 12%;
+    --popover: 230 25% 8%;
     --popover-foreground: 210 40% 98%;
-    --primary: 345 80% 50%;
+    --primary: 250 80% 60%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 220 25% 20%;
+    --secondary: 230 25% 15%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 220 25% 20%;
+    --muted: 230 25% 15%;
     --muted-foreground: 215 20% 65%;
-    --accent: 345 80% 50%;
+    --accent: 250 80% 60%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62% 30%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 220 25% 20%;
-    --input: 220 25% 20%;
-    --ring: 345 80% 50%;
-    --radius: 0.5rem;
+    --border: 230 25% 12%;
+    --input: 230 25% 10%;
+    --ring: 250 80% 60%;
+    --radius: 0.75rem;
   }
 }
 
@@ -68,10 +68,11 @@
 }
 
 .glass-panel {
-  background: rgba(15, 20, 30, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(10, 15, 25, 0.4);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
 }
 
 .gaming-input {
