@@ -9,10 +9,19 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  // WebSocket Server Setup
-  const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+  // WebSocket Server Setup (Disabled on Vercel as it's not supported)
+  const isVercel = process.env.VERCEL === "1";
+  let wss: WebSocketServer | null = null;
+
+  if (!isVercel) {
+    wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+    wss.on("connection", (ws) => {
+      console.log("New WebSocket connection");
+    });
+  }
 
   const broadcast = (data: any) => {
+    if (!wss) return;
     const message = JSON.stringify(data);
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
@@ -20,10 +29,6 @@ export async function registerRoutes(
       }
     });
   };
-
-  wss.on("connection", (ws) => {
-    console.log("New WebSocket connection");
-  });
 
   // Prevent browser caching for all API routes
   app.use("/api", (_req, res, next) => {
