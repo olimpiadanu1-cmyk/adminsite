@@ -34,7 +34,12 @@ export class JSONStorage implements IStorage {
     this.users = new Map();
     this.applications = new Map();
     this.visits = 0;
-    this.filePath = path.resolve(process.cwd(), "data.json");
+
+    // В Vercel записывать можно только в /tmp
+    const isVercel = process.env.VERCEL === "1";
+    this.filePath = isVercel
+      ? path.join("/tmp", "data.json")
+      : path.resolve(process.cwd(), "data.json");
 
     const initialConfig: AppConfig = {
       adminPassword: "reynovadminlist",
